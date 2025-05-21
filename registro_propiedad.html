@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Propiedad - MK Inmuebles</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f9f9f9; padding: 30px; }
+        form { background: white; padding: 20px; border-radius: 8px; max-width: 700px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        input, textarea, select { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 4px; border: 1px solid #ccc; }
+        button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #218838; }
+        .mensaje { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <form id="propiedadForm">
+        <h2>Registrar Nueva Propiedad</h2>
+        <input type="text" name="nombre_comercial" placeholder="Nombre comercial" required />
+        <textarea name="descripcion" placeholder="Descripción" required></textarea>
+        <input type="text" name="tipo" placeholder="Tipo de propiedad (ej. departamento, casa)" required />
+        <input type="text" name="distrito" placeholder="Distrito" required />
+        <input type="text" name="direccion" placeholder="Dirección" required />
+        <input type="number" name="precio" placeholder="Precio (USD)" required />
+        <input type="number" name="area_total" placeholder="Área total (m²)" />
+        <input type="number" name="area_ocupada" placeholder="Área ocupada (m²)" />
+        <input type="number" name="piso" placeholder="Piso" />
+        <select name="ascensor"><option value="">¿Ascensor?</option><option value="Sí">Sí</option><option value="No">No</option></select>
+        <input type="number" name="cocheras" placeholder="Cantidad de cocheras" />
+        <select name="terraza"><option value="">¿Terraza?</option><option value="Sí">Sí</option><option value="No">No</option></select>
+        <select name="cuarto_servicio"><option value="">¿Cuarto de servicio?</option><option value="Sí">Sí</option><option value="No">No</option></select>
+        <select name="baño_servicio"><option value="">¿Baño de servicio?</option><option value="Sí">Sí</option><option value="No">No</option></select>
+        <input type="number" name="dormitorios" placeholder="Dormitorios" />
+        <input type="number" name="baños" placeholder="Baños" />
+        <textarea name="fotos" placeholder="Pega aquí URLs de fotos separadas por coma" required></textarea>
+        <input type="text" name="contacto_whatsapp" placeholder="WhatsApp de contacto" />
+        <input type="text" name="agente" placeholder="Nombre del agente" />
+        <button type="submit">Registrar Propiedad</button>
+        <div class="mensaje" id="mensaje"></div>
+    </form>
+
+    <script>
+        const form = document.getElementById('propiedadForm');
+        const mensaje = document.getElementById('mensaje');
+        const API_URL = 'https://idgonow.up.railway.app/api/v1/db/data/noco/pxngm0qy3sl6cf3/me49ya93l6xmgxb';
+        const TOKEN = 'HzyX5A2ycuqlDhV2uyiQ-12UhN_DM0uO4Bfxe7hy';
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const data = {};
+            formData.forEach((value, key) => {
+                if (key === 'fotos') {
+                    data[key] = value.split(',').map(url => url.trim());
+                } else {
+                    data[key] = value;
+                }
+            });
+            data['fecha_publicacion'] = new Date().toISOString().split('T')[0];
+            data['estado'] = 'disponible';
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + TOKEN,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    mensaje.textContent = '✅ Propiedad registrada exitosamente.';
+                    mensaje.style.color = 'green';
+                    form.reset();
+                } else {
+                    const err = await res.json();
+                    mensaje.textContent = '❌ Error al registrar: ' + (err.message || 'verifica los datos.');
+                    mensaje.style.color = 'red';
+                }
+            } catch (error) {
+                mensaje.textContent = '❌ Error de red o del servidor.';
+                mensaje.style.color = 'red';
+            }
+        });
+    </script>
+</body>
+</html>
