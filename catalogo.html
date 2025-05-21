@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Catálogo de Propiedades - MK Inmuebles</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+        .container { max-width: 1200px; margin: auto; padding: 20px; }
+        .filters { margin-bottom: 20px; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; overflow: hidden; display: flex; }
+        .card img { width: 200px; height: 150px; object-fit: cover; }
+        .card-content { padding: 15px; flex: 1; }
+        .card-content h3 { margin: 0 0 10px; }
+        .btn { display: inline-block; background: #25D366; color: white; padding: 10px 15px; border-radius: 5px; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Catálogo de Propiedades</h1>
+        <div class="filters">
+            <label>Tipo:
+                <select id="filterTipo" onchange="renderPropiedades()">
+                    <option value="">Todos</option>
+                </select>
+            </label>
+            <label style="margin-left:20px;">Distrito:
+                <select id="filterDistrito" onchange="renderPropiedades()">
+                    <option value="">Todos</option>
+                </select>
+            </label>
+        </div>
+        <div id="propiedadesContainer"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://mkinmuebles.up.railway.app/api/v1/db/data/noco/p71zrcizv8i17uw/mltlcc8t560cnta?filter=estado%3D\'disponible\'';
+
+        let propiedades = [];
+
+        async function fetchPropiedades() {
+            const res = await fetch(API_URL);
+            const data = await res.json();
+            propiedades = data.list || [];
+            populateFilters();
+            renderPropiedades();
+        }
+
+        function populateFilters() {
+            const tipos = [...new Set(propiedades.map(p => p.tipo).filter(Boolean))];
+            const distritos = [...new Set(propiedades.map(p => p.distrito).filter(Boolean))];
+
+            const tipoSelect = document.getElementById('filterTipo');
+            const distritoSelect = document.getElementById('filterDistrito');
+
+            tipos.forEach(tipo => {
+                let opt = document.createElement('option');
+                opt.value = tipo;
+                opt.textContent = tipo;
+                tipoSelect.appendChild(opt);
+            });
+
+            distritos.forEach(distrito => {
+                let opt = document.createElement('option');
+                opt.value = distrito;
+                opt.textContent = distrito;
+                distritoSelect.appendChild(opt);
+            });
+        }
+
+        function renderPropiedades() {
+            const tipoFiltro = document.getElementById('filterTipo').value;
+            const distritoFiltro = document.getElementById('filterDistrito').value;
+            const contenedor = document.getElementById('propiedadesContainer');
+            contenedor.innerHTML = '';
+
+            const filtradas = propiedades.filter(p => {
+                return (!tipoFiltro || p.tipo === tipoFiltro) &&
+                       (!distritoFiltro || p.distrito === distritoFiltro);
+            });
+
+            if (filtradas.length === 0) {
+                contenedor.innerHTML = '<p>No se encontraron propiedades.</p>';
+                return;
+            }
+
+            filtradas.forEach(p => {
+                const imgUrl = Array.isArray(p.fotos) ? p.fotos[0]?.url : (typeof p.fotos === 'string' ? p.fotos : '');
+                const nombre = p.nombre_comercial || 'Propiedad sin nombre';
+                const precio = p.precio ? `$${p.precio.toLocaleString()}` : '';
+                const tipo = p.tipo || '';
+                const distrito = p.distrito || '';
+                const whatsapp = p.contacto_whatsapp || '';
+
+                const mensaje = encodeURIComponent(`Hola, estoy interesado en la propiedad "${nombre}" que vi en el catálogo.`);
+                const waLink = whatsapp ? `https://wa.me/${whatsapp}?text=${mensaje}` : '#';
+
+                const card = `
+                    <div class="card">
+                        <img src="${imgUrl}" alt="${nombre}">
+                        <div class="card-content">
+                            <h3>${nombre}</h3>
+                            <p><strong>Tipo:</strong> ${tipo} | <strong>Distrito:</strong> ${distrito}</p>
+                            <p><strong>Precio:</strong> ${precio}</p>
+                            <a class="btn" href="${waLink}" target="_blank">Contactar por WhatsApp</a>
+                        </div>
+                    </div>
+                `;
+                contenedor.innerHTML += card;
+            });
+        }
+
+        fetchPropiedades();
+    </script>
+</body>
+</html>
