@@ -38,7 +38,11 @@
         let propiedades = [];
 
         async function fetchPropiedades() {
-            const res = await fetch(API_URL);
+            const res = await fetch(API_URL, {
+                headers: {
+                    'Authorization': 'Bearer NMgk3P3YgeWUiiJR5eqJIxYEMBWWUr00jRI6qnvn'
+                }
+            });
             const data = await res.json();
             propiedades = data.list || [];
             populateFilters();
